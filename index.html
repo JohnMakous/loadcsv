@@ -1,63 +1,92 @@
-<html>
+<!-- Upload file to pyscript -->
 
-<head>
-
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
-    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.9.3/dist/js/tabulator.js"></script>
-    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.js"></script>
-    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.min.js"></script>
-    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-2.4.2.min.js"></script>
-    <script type="text/javascript" src="https://unpkg.com/@holoviz/panel@0.13.0/dist/panel.min.js"></script>
-    <script type="text/javascript">
-      Bokeh.set_log_level("info");
-    </script>
-
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>py-script demos: csv upload form</title>
+  
+    <!-- pyscript -->
     <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
     <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
-    <py-env>
-        - numpy
-        - pandas
-        - panel==0.13.1a2
-    </py-env>
-</head>
+  </head>
+  <body>
+  
 
-<body>
-    <h1>Upload csv</h1>
+        <h1>py-script : How to read an Image from Local File system using File Upload</h1>
 
-        
           
-                <div id="fileinput"></div>
-                <div id="upload"></div>
-                <div id="table"></div>
-            
-        
-     
-    <py-script>
-import asyncio
-import panel as pn
-import pandas as pd
-from panel.io.pyodide import show
+            <p>Upload a csv File</p>
+            <ol>
+              <li>
+                <label for="upload">File Upload:</label>
+                <input type="file" name="upload" id="upload">
+              </li>
+            </ol>
+          
+          
+          
 
-fileInput = pn.widgets.FileInput(accept='.csv')
-uploadButton = pn.widgets.Button(name='Upload', button_type = 'primary')
+        <p id="content"></p>
 
-table = pn.widgets.Tabulator(pagination='remote', page_size=10)
+<!-- py-script and py-env -->
 
-document.getElementById('table').style.display = 'none'
+<!-- <py-env>
+</py-env> -->
 
-def process_file(event):
-    if fileInput.value is not None:
-        table.value = pd.read_csv(io.BytesIO(fileInput.value))
-        document.getElementById('table').style.display = 'block'
+<py-script>
+  import asyncio
+  import js
+  from js import document, FileReader
+  from pyodide import create_proxy
+   
+  def read_complete(event):
+    # event is ProgressEvent
+   
+    content = document.getElementById("content");
+    content.innerText = event.target.result
 
-uploadButton.on_click(process_file)
+   
+  async def process_file(x):
+    fileList = document.getElementById('upload').files
+   
+    for f in fileList:
+      # reader is a pyodide.JsProxy
+      reader = FileReader.new()
+   
+      # Create a Python proxy for the callback function
+      onload_event = create_proxy(read_complete)
 
-await show(fileInput, 'fileinput')
-await show(uploadButton, 'upload')
-await show(table, 'table')
-    </py-script>
-</body>
+      #console.log("done")
+   
+      reader.onload = onload_event
+   
+      reader.readAsText(f)
+   
+    return
+   
+  def main():
+    # Create a Python proxy for the callback function
+    file_event = create_proxy(process_file)
+   
+    # Set the listener to the callback
+    e = document.getElementById("upload")
+    e.addEventListener("change", file_event, False)
+   
+  main()
+   
 
+</py-script>
+
+<!-- end py-script and py-env -->
+
+<!-- Output -->
+
+<div id="container">
+
+</div>
+
+
+  </body>
 </html>
